@@ -1,0 +1,70 @@
+##Fullback Template
+
+##Package Installation and Font Addition
+library(tidyverse)
+library(ggplot2)
+library(usethis)
+library(devtools)
+library(stringr)
+library(worldfootballR)
+library(showtext)
+font_add_google("Lato", family = "lato")
+showtext_auto()
+
+## FBref.com Data Pull
+df <- fb_player_scouting_report("https://fbref.com/en/players/a67a09fb/Christian-Fuchs", pos_versus = "primary")
+player_df <- df[c(86, 93, 105, 95, 123, 132, 28, 128, 44, 41, 45, 22, 146, 148, 116, 137),]
+player_df$index <- 1:16
+player_df <- player_df %>%
+mutate(type = case_when(
+index %in% 1:4 ~ "Defending",
+index %in% 5:8 ~ "Progression",
+index %in% 9:12 ~ "Final 3rd Production",
+index %in% 13:16 ~ "Other/Set Piece"
+))
+player_df$type <- factor(player_df$type, levels = c("Defending", "Progression", "Final 3rd Production", "Other/Set Piece"))
+
+##Radar Plot Creation
+MCB <- rgb(0, .52, .792, .8)
+MCG <- rgb(.635, .894, .722, .8)
+MCR <- rgb(.8902, .6392, .8, .8)
+MCY <- rgb(.89, .851, .635, .8)
+
+#Plotting
+ggplot(data = player_df, aes(x = reorder(Statistic, index), y = Percentile, label= Per90, fill = type)) +
+  geom_bar(data = player_df, width = 1,
+             color = "azure",
+             stat = "identity") +
+  coord_polar(clip = "off") +
+  geom_bar(aes(y=100, fill=type), stat="identity", width=1, alpha=0.2) +
+  geom_hline(yintercept = seq(0, 100, by = 100),
+               color = "azure",
+               size = 1) +
+  geom_hline(yintercept=25, colour="azure",linetype="longdash",alpha=0.3) +
+  geom_hline(yintercept=50, colour="azure",linetype="longdash",alpha=0.3) +
+  geom_hline(yintercept=75, colour="azure",linetype="longdash",alpha=0.3) +
+  geom_segment(color = "azure", x= seq(0.5,16,by=1),y=0,yend=100,xend=seq(0.5,16,by=1)) +
+  geom_label(color = "black", fill = "azure", size=4, fontface="bold", family = "lato", show.legend = FALSE) +
+  scale_fill_manual(values=c(MCB, MCG, MCR, MCY)) +
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
+  scale_y_continuous(limits = c(-10, 100)) +
+  theme(legend.position = "none",
+          legend.direction = "horizontal",
+          legend.background = element_rect(fill = "black", color="black"),
+          legend.title = element_blank(),
+          legend.text = element_text(colour = "azure", family = "lato", face = "bold"),
+          legend.key.size = unit(.5, "cm"),
+          legend.box.spacing = unit(0, "mm"),
+          plot.title = element_text(hjust = .5, colour = "azure", face = "bold", size = 48, family = "lato"),
+          plot.subtitle = element_text(hjust = .5, colour = "azure", size = 16, family = "lato"),
+          plot.caption = element_text(hjust = 0, colour = "azure", size = 6),
+          plot.background = element_rect(fill = "black", color="black"),
+          panel.background = element_rect(fill = "black", color="black"),
+          panel.grid = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_text(face = "bold", size = 12, color = "azure"),
+          axis.title = element_blank(),
+          axis.text.x = element_text(face = "bold", size = 12.2, color = "azure", family = "lato", angle = 0)) +
+   labs(title = "Christian Fuchs", caption = "Graphic By: @MC__Analytics     Acknowledgement: @DSamangy, @JaseZiv, @NathanAClark, @RobinWilhelmus     Data: fbRef",
+         subtitle = "Last 365 Days - 2145 min. - FB Template - 36 Years Old", x = NULL, y = NULL)

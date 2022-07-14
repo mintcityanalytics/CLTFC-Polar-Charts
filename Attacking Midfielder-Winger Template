@@ -1,0 +1,74 @@
+## AM-W Template
+## Package Installation and Font Addition
+library(tidyverse)
+library(ggplot2)
+library(usethis)
+library(devtools)
+library(stringr)
+library(worldfootballR)
+library(showtext)
+font_add_google("Lato", family = "lato")
+showtext_auto()
+
+## Data Wrangling and Organization
+# FBref.com Data Pull
+df <- fb_player_scouting_report("https://fbref.com/en/players/bc307884/Ben-Bender", pos_versus = "primary")
+# Selected variables from dataframe for Radar Plot
+player_df <- df[c(96, 107, 147, 149, 44, 126, 133, 29, 115, 10, 9, 45, 55, 118, 119, 138),]
+player_df$index <- 1:16
+player_df <- player_df %>%
+mutate(type = case_when(
+index %in% 1:4 ~ "Defending",
+index %in% 5:8 ~ "Build Up Contribution",
+index %in% 9:12 ~ "Final 3rd Production",
+index %in% 13:16 ~ "Winger Talent"
+))
+player_df$type <- factor(player_df$type, levels = c("Defending", "Build Up Contribution", "Final 3rd Production", "Winger Talent"))
+
+## Radar Plot Creation
+# Set Colors for Radar
+MCB <- rgb(0, .52, .792, .8)
+MCG <- rgb(.635, .894, .722, .8)
+MCR <- rgb(.8902, .6392, .8, .8)
+MCY <- rgb(.89, .851, .635, .8)
+# Plotting
+ggplot(data = player_df, aes(x = reorder(Statistic, index), y = Percentile, label= Per90, fill = type)) +
+  geom_bar(data = player_df, width = 1,
+             color = "black",
+             stat = "identity") +
+# Change Bar Graph to Polar
+  coord_polar(clip = "off") +
+  geom_bar(aes(y=100, fill=type), stat="identity", width=1, alpha=0.2) +
+# Create lines between radar slices and dashed percentile lines
+  geom_hline(yintercept = seq(0, 100, by = 100),
+               color = "azure",
+               size = 1) +
+  geom_hline(yintercept=25, colour="azure",linetype="longdash",alpha=0.3) +
+  geom_hline(yintercept=50, colour="azure",linetype="longdash",alpha=0.3) +
+  geom_hline(yintercept=75, colour="azure",linetype="longdash",alpha=0.3) +
+  geom_segment(color = "azure", x= seq(0.5,16,by=1),y=0,yend=100,xend=seq(0.5,15,by=1)) +
+# Create labels
+  geom_label(color = "black", fill = "azure", size=4, fontface="bold", family = "lato", show.legend = FALSE) +
+# Establish Colors for each section
+  scale_fill_manual(values=c(MCB, MCG, MCY)) +
+# Make sure text wraps for variables 
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
+# Creates hole in middle of radar to improve spacing
+  scale_y_continuous(limits = c(-10, 100)) +
+# Set theme color for entire plot
+  theme(text = element_text(family = "lato"),
+        legend.position = "none",
+          plot.title = element_text(hjust = .5, colour = "azure", face = "bold", size = 48),
+          plot.subtitle = element_text(hjust = .5, colour = "azure", size = 16),
+          plot.caption = element_text(hjust = 0, colour = "azure", size = 6),
+          plot.background = element_rect(fill = "black", color="black"),
+          panel.background = element_rect(fill = "black", color="black"),
+          panel.grid = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_text(face = "bold", size = 12, colour = "azure"),
+          axis.title = element_blank(),
+          axis.text.x = element_text(face = "bold", size = 12.2, angle = 0)) +
+  # Apply title and provide proper acknowledgement
+   labs(title = "Ben Bender", caption = "Acknowledgement: @DSamangy, @JaseZiv, @NathanAClark, @RobinWilhelmus     Data: fbRef",
+   subtitle = "Last 365 Days - 1201 min. - AM-W Template - 21 Years Old", x = NULL, y = NULL)

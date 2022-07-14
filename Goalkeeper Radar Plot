@@ -76,4 +76,4 @@ ggplot(data = player_df, aes(x = reorder(Statistic, index), y = Percentile, labe
           axis.text.x = element_text(face = "bold", size = 12.2, angle = 0)) +
   # Apply title and provide proper acknowledgement
    labs(title = "Kristijan Kahlina", caption = "Acknowledgement: @DSamangy, @JaseZiv, @NathanAClark, @RobinWilhelmus     Data: fbRef",
-         subtitle = "@MC__Analytics - Last 365 Days - 1080 min. - Goalkeeper Template", x = NULL, y = NULL)
+         subtitle = "Last 365 Days - 1080 min. - Goalkeeper Template - 29 Years Old", x = NULL, y = NULL)
